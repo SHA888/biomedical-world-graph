@@ -321,8 +321,9 @@ nodes.forEach(n => {
 // labels
 const labelGroup = new THREE.Group();
 scene.add(labelGroup);
-nodes.forEach(n => {
-  const mesh = nodeObjects.get(n.id);
+nodeData.forEach(ndata => {
+  const n = ndata.node;
+  const mesh = ndata.mesh;
   const labelDiv = document.createElement('div');
   labelDiv.className = 'node-label';
   labelDiv.style.fontSize = n.type === 'core' ? '14px' : n.type === 'limb' ? '11px' : '8px';
@@ -335,7 +336,7 @@ nodes.forEach(n => {
   labelDiv.style.textShadow = '0 0 4px rgba(10,14,26,0.8)';
   labelDiv.textContent = n.name;
   const label = new THREE.CSS2DObject(labelDiv);
-  label.position.copy(mesh.position);
+  label.position.set(ndata.x, ndata.y, ndata.z);
   mesh.userData.label = label;
   labelGroup.add(label);
 });
@@ -432,6 +433,18 @@ function simulate() {
     n.vz -= n.z * 0.0001;
   });
 
+  // clamp velocity to prevent runaway acceleration
+  const maxVelocity = 100;
+  nodeData.forEach(n => {
+    const v = Math.sqrt(n.vx*n.vx + n.vy*n.vy + n.vz*n.vz);
+    if (v > maxVelocity) {
+      const scale = maxVelocity / v;
+      n.vx *= scale;
+      n.vy *= scale;
+      n.vz *= scale;
+    }
+  });
+
   // update positions
   nodeData.forEach(n => {
     if (n.fx != null) n.x = n.fx;
@@ -441,7 +454,7 @@ function simulate() {
     if (n.fz != null) n.z = n.fz;
     else n.z += n.vz;
     n.mesh.position.set(n.x, n.y, n.z);
-    if (n.mesh.userData.label) n.mesh.userData.label.position.copy(n.mesh.position);
+    n.mesh.userData.label.position.copy(n.mesh.position);
   });
 
   // update links
