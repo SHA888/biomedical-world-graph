@@ -31,64 +31,7 @@
     overflow: hidden;
   }
 
-  #stage { position: fixed; inset: 0; }
-
-  svg { width: 100%; height: 100%; display: block; cursor: grab; }
-  svg:active { cursor: grabbing; }
-
-  /* ---- ambient field ---- */
-  .star { fill: #fff; }
-
-  /* ---- links ---- */
-  .link { stroke: var(--rule); stroke-width: 1; fill: none; }
-  .link.tier1 { stroke: rgba(139,155,180,0.35); stroke-width: 1.6; }
-
-  /* ---- AI beams ---- */
-  .beam {
-    stroke: var(--ai);
-    stroke-width: 1.4;
-    fill: none;
-    opacity: 0;
-    filter: drop-shadow(0 0 4px var(--ai));
-    transition: opacity 0.5s ease;
-  }
-  .beam.on { opacity: 0.55; stroke-dasharray: 5 7; animation: flow 1.1s linear infinite; }
-  @keyframes flow { to { stroke-dashoffset: -24; } }
-
-  /* ---- nodes ---- */
-  .node { cursor: pointer; }
-  .node circle { transition: r 0.25s ease, opacity 0.25s ease; }
-
-  .node.core circle { fill: var(--core); filter: drop-shadow(0 0 16px rgba(244,213,141,0.6)); }
-  .node.limb circle { fill: var(--bg2); stroke: var(--limb); stroke-width: 2; }
-  .node.leaf circle { fill: var(--bg2); stroke: var(--leaf); stroke-width: 1.4; }
-  .node.hot circle  { fill: var(--hot); stroke: var(--hot-glow); stroke-width: 1.4; filter: drop-shadow(0 0 8px rgba(255,107,53,0.55)); }
-  .node.aihub circle { fill: #0a2030; stroke: var(--ai); stroke-width: 2; filter: drop-shadow(0 0 12px rgba(79,209,255,0.5)); }
-
-  .node.hot.pulse circle { animation: pulse 2.6s ease-in-out infinite; }
-  @keyframes pulse {
-    0%,100% { filter: drop-shadow(0 0 6px rgba(255,107,53,0.4)); }
-    50%     { filter: drop-shadow(0 0 16px rgba(255,107,53,0.85)); }
-  }
-
-  .node text {
-    font-family: 'Space Grotesk', sans-serif;
-    fill: var(--ink);
-    paint-order: stroke;
-    stroke: var(--bg);
-    stroke-width: 3px;
-    stroke-linejoin: round;
-    pointer-events: none;
-    user-select: none;
-  }
-  .node.core text { font-family: 'Fraunces', serif; font-weight: 900; font-size: 19px; fill: var(--core); }
-  .node.limb text { font-weight: 600; font-size: 13px; }
-  .node.leaf text { font-size: 10.5px; fill: var(--ink-dim); }
-  .node.hot text  { font-size: 10.5px; fill: #ffd9c7; }
-  .node.aihub text{ font-family: 'Fraunces', serif; font-weight: 600; font-size: 13px; fill: var(--ai); }
-
-  .node.dim { opacity: 0.12; }
-  .link.dim { opacity: 0.04; }
+  #canvas { display: block; }
 
   /* ---- HUD ---- */
   .hud {
@@ -198,64 +141,56 @@
   }
   #panel .note { margin-top: 14px; font-size: 12px; line-height: 1.5; color: var(--ink-dim); }
   #panel .kids { margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--rule); }
-  #panel .kids .kl { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--leaf); margin-bottom:8px; }
-  #panel .kids span { display:inline-block; font-size:11.5px; color:var(--ink); background:rgba(139,155,180,0.1); border-radius:6px; padding:3px 8px; margin:0 5px 5px 0; }
-  #panel .kids span.h { color:#ffd9c7; background:rgba(255,107,53,0.14); }
-
-  @media (max-width: 720px) {
-    #title h1 { font-size: 23px; }
-    #title p { display: none; }
-    #panel { right: 14px; left: 14px; width: auto; top: auto; bottom: 14px; transform: translateY(20px); }
-    #panel.show { transform: translateY(0); }
-    #controls { right: 14px; top: 18px; }
-    #legend { display: none; }
-  }
+  #panel .kid { margin: 9px 0; font-size: 11px; color: var(--ink-dim); }
 </style>
 </head>
 <body>
-<div id="stage">
-  <svg id="svg"></svg>
-</div>
+<canvas id="canvas"></canvas>
 
-<div class="hud" id="title">
-  <h1>The Biomedical Field <span class="yr">2026</span></h1>
-  <p>Nine durable limbs radiating from one term. Glowing nodes are 2026 live movement — they drift within a year. AI/ML is a force, not a branch: switch it on to see where it pushes.</p>
-</div>
-
-<div class="hud" id="controls">
-  <div class="toggle" id="aiToggle">
-    <span>AI / ML force field</span>
-    <span class="sw"></span>
+<div class="hud">
+  <div id="title">
+    <h1>The Biomedical Field<br><span class="yr">2026</span></h1>
+    <p>Nine durable limbs radiating from one term. Glowing nodes are 2026 live movement — they drift within a year. AI/ML is a force, not a branch: switch it on to see where it pushes.</p>
   </div>
-  <div class="hint">drag to pan · scroll to zoom<br>click a node to inspect</div>
+
+  <div id="controls">
+    <button id="aiToggle" class="toggle">
+      <span>AI / ML force field</span>
+      <div class="sw"></div>
+    </button>
+    <div class="hint">
+      drag to rotate<br>
+      scroll to zoom<br>
+      click a node to inspect
+    </div>
+  </div>
+
+  <div id="legend">
+    <div class="row"><div class="dot core"></div> <span>the term — "biomedical"</span></div>
+    <div class="row"><div class="dot limb"></div> <span>durable limb / sub-field</span></div>
+    <div class="row"><div class="dot hot"></div> <span>2026 live movement (*)</span></div>
+    <div class="row"><div class="dot ai"></div> <span>AI/ML cross-cutting force</span></div>
+  </div>
 </div>
 
-<div class="hud" id="legend">
-  <div class="row"><span class="dot core"></span> the term — “biomedical”</div>
-  <div class="row"><span class="dot limb"></span> durable limb / sub-field</div>
-  <div class="row"><span class="dot hot"></span> 2026 live movement (★)</div>
-  <div class="row"><span class="dot ai"></span> AI/ML cross-cutting force</div>
+<div id="panel">
+  <div class="tag" id="pTag"></div>
+  <h2 id="pName"></h2>
+  <div id="pNote"></div>
+  <div id="pKids"></div>
 </div>
 
-<div class="hud" id="panel">
-  <div class="tag" id="pTag">limb</div>
-  <h2 id="pName">—</h2>
-  <div id="pFlags"></div>
-  <div class="note" id="pNote"></div>
-  <div class="kids" id="pKids" style="display:none"></div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 /* ---------------------------------------------------------------
    DATA — transcribed verbatim from biomedical-2026-taxonomy.md
    nothing invented; * = live 2026 snapshot; AI targets per source
 ----------------------------------------------------------------*/
 const HOT = new Set(["sysbio","biomat","tissue","bioelec","loc","fmodels","dtwin","drug","gened","cellgene","degrad","diag","wear","samd","surv","precph","datastrat","spatial","reg","repro","fund"]);
-const AI_TARGETS = ["fmodels","tissue","surv","drug","biomat","dtwin","spatial","diag"]; // dotted edges in source
+const AI_TARGETS = ["fmodels","tissue","surv","drug","biomat","dtwin","spatial","diag"];
 
 const NOTES = {
-  bm: "A graph of what connects to the term “biomedical.” The limb structure is definitional and durable; the 2026 items are a snapshot.",
+  bm: "A graph of what connects to the term "biomedical." The limb structure is definitional and durable; the 2026 items are a snapshot.",
   found:"Foundational sciences underpinning all of biomedicine.",
   eng:"Devices, materials, and instrumentation at the bio–engineering boundary.",
   info:"Biomedical informatics, framed per AMIA — data, decisions, standards.",
@@ -266,25 +201,6 @@ const NOTES = {
   data:"Cross-cutting data substrates and methods.",
   gov:"The rules of the game: regulation, ethics, reproducibility, funding.",
   aix:"AI/ML pushes into informatics, engineering, public health, research, therapeutics, diagnostics, and data simultaneously. Source marks 8 explicit targets.",
-  // hot leaves get source-grounded movement notes
-  fmodels:"Foundation/multimodal models & agentic systems. Signal: JBHI special issues; CVPR 2026 MMFM-BIOMED.",
-  tissue:"AI-driven 3D bioprinting. Signal: Case Western / MDPI Biomedicines 2026.",
-  biomat:"Smart nanomaterials & CRISPR-based biosensors. Signal: MDPI Biomedicines 2026.",
-  loc:"Lab-on-chip point-of-care diagnostics. Signal: engineering trend reporting 2026.",
-  drug:"AI-led drug discovery. Cross-cut by the AI force.",
-  gened:"N-of-1 personalized & prime editing — human validation. Signal: 2026 therapeutic-trend reporting.",
-  degrad:"Molecular glues displacing PROTACs. Signal: 2026 therapeutic-trend reporting.",
-  dtwin:"Digital twins. Signal: JBHI special issues.",
-  spatial:"Spatial transcriptomics at commercial scale. Signal: industry launch reporting 2026.",
-  surv:"Wastewater & genomic surveillance + ML; mass-gathering deployment (2026 FIFA WC). Signal: Science; ScienceDirect 2026.",
-  precph:"Precision public health. Population stratification at finer grain.",
-  datastrat:"Public-health data modernization. Signal: CDC PHDS.",
-  diag:"Point-of-care diagnostics. Cross-cut by the AI force.",
-  wear:"Wearables / continuous monitoring at clinical grade.",
-  samd:"Software as a Medical Device — regulated clinical software.",
-  reg:"FDA AI-credibility guidance; AI in IND/BLA. Signal: 2025–26 regulatory reporting.",
-  repro:"Reproducibility / data governance under scrutiny.",
-  fund:"US NIH/NSF cuts reshaping where work happens. Signal: 2025–26 funding reporting.",
   sysbio:"Systems biology as an active integrative frame."
 };
 
@@ -320,7 +236,6 @@ limbs.forEach(L => {
     links.push({ source:L.id, target:id, tier:2 });
   });
 });
-// AI hub
 nodes.push({ id:"aix", name:"AI / ML", type:"aihub" });
 const beams = AI_TARGETS.map(t => {
   const srcNode = nodes.find(n => n.id === "aix");
@@ -329,84 +244,262 @@ const beams = AI_TARGETS.map(t => {
 });
 
 /* ---------------------------------------------------------------
-   RENDER
+   THREE.JS SETUP
 ----------------------------------------------------------------*/
-const svg = d3.select("#svg");
-let W = window.innerWidth, H = window.innerHeight;
+const canvas = document.getElementById("canvas");
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x0a0e1a);
+camera.position.z = 300;
 
-// ambient starfield
-const fieldG = svg.append("g").attr("class","field");
-for (let i=0;i<140;i++){
-  fieldG.append("circle").attr("class","star")
-    .attr("cx", Math.random()*W).attr("cy", Math.random()*H)
-    .attr("r", Math.random()*1.1+0.2)
-    .attr("opacity", Math.random()*0.5+0.1);
-}
+// lighting
+const light1 = new THREE.DirectionalLight(0xffffff, 0.8);
+light1.position.set(500, 500, 500);
+scene.add(light1);
+const light2 = new THREE.AmbientLight(0xffffff, 0.4);
+scene.add(light2);
 
-const zoomG = svg.append("g");
-const beamG = zoomG.append("g");
-const linkG = zoomG.append("g");
-const nodeG = zoomG.append("g");
+// colors
+const colors = {
+  core: 0xf4d58d,
+  limb: 0x8b9bb4,
+  leaf: 0x5b6b85,
+  hot: 0xff6b35,
+  ai: 0x4fd1ff,
+  linkHi: 0x586e8d,
+  linkLo: 0x2a3a4f,
+};
 
-const zoom = d3.zoom().scaleExtent([0.4, 4]).on("zoom", e => zoomG.attr("transform", e.transform));
-svg.call(zoom);
+// groups
+const nodeGroup = new THREE.Group();
+const linkGroup = new THREE.Group();
+const beamGroup = new THREE.Group();
+scene.add(nodeGroup);
+scene.add(linkGroup);
+scene.add(beamGroup);
 
-const sim = d3.forceSimulation(nodes)
-  .force("link", d3.forceLink(links).id(d=>d.id)
-      .distance(d => d.tier===1 ? 150 : 64)
-      .strength(d => d.tier===1 ? 0.5 : 0.7))
-  .force("charge", d3.forceManyBody().strength(d =>
-      d.type==="core" ? -1400 : d.type==="limb" ? -560 : d.type==="aihub" ? -700 : -130))
-  .force("center", d3.forceCenter(W/2, H/2))
-  .force("collide", d3.forceCollide().radius(d =>
-      d.type==="core"?54:d.type==="limb"?30:d.type==="aihub"?40:18))
-  .force("x", d3.forceX(W/2).strength(0.02))
-  .force("y", d3.forceY(H/2).strength(0.02));
+// node objects: THREE.Mesh for each
+const nodeObjects = new Map();
+nodes.forEach(n => {
+  let geom, mat, radius;
+  if (n.type === "core") {
+    radius = 12;
+    geom = new THREE.SphereGeometry(radius, 32, 32);
+    mat = new THREE.MeshStandardMaterial({ color: colors.core, emissive: colors.core, emissiveIntensity: 0.3 });
+  } else if (n.type === "limb") {
+    radius = 6;
+    geom = new THREE.SphereGeometry(radius, 24, 24);
+    mat = new THREE.MeshStandardMaterial({ color: colors.limb, metalness: 0.3, roughness: 0.7 });
+  } else if (n.type === "aihub") {
+    radius = 8;
+    geom = new THREE.SphereGeometry(radius, 24, 24);
+    mat = new THREE.MeshStandardMaterial({ color: colors.ai, emissive: colors.ai, emissiveIntensity: 0.2, metalness: 0.5, roughness: 0.5 });
+  } else if (n.type === "hot") {
+    radius = 4;
+    geom = new THREE.SphereGeometry(radius, 20, 20);
+    mat = new THREE.MeshStandardMaterial({ color: colors.hot, emissive: colors.hot, emissiveIntensity: 0.2, metalness: 0.4, roughness: 0.6 });
+  } else {
+    radius = 3;
+    geom = new THREE.SphereGeometry(radius, 16, 16);
+    mat = new THREE.MeshStandardMaterial({ color: colors.leaf, metalness: 0.2, roughness: 0.8 });
+  }
+  const mesh = new THREE.Mesh(geom, mat);
+  mesh.userData = { id: n.id, node: n, radius };
+  nodeGroup.add(mesh);
+  nodeObjects.set(n.id, mesh);
+});
 
-// pin AI hub to lower-left so its beams arc across the field
-const aiNode = nodes.find(n=>n.id==="aix");
+// links: lines
+links.forEach(l => {
+  const geom = new THREE.BufferGeometry();
+  const src = nodeObjects.get(l.source);
+  const tgt = nodeObjects.get(l.target);
+  const srcNode = src.userData.node;
+  const tgtNode = tgt.userData.node;
+  l.sourceMesh = src;
+  l.targetMesh = tgt;
+  const material = new THREE.LineBasicMaterial({ color: l.tier === 1 ? colors.linkHi : colors.linkLo, linewidth: l.tier === 1 ? 2 : 1 });
+  const line = new THREE.Line(geom, material);
+  line.userData = { link: l };
+  linkGroup.add(line);
+});
 
-const linkSel = linkG.selectAll("line").data(links).join("line")
-  .attr("class", d => "link tier"+d.tier);
+// beams: smooth curves (via TubeGeometry approximation with quadratic)
+beams.forEach(b => {
+  b.sourceMesh = nodeObjects.get(b.source.id);
+  b.targetMesh = nodeObjects.get(b.target.id);
+  const curve = new THREE.QuadraticBezierCurve3(
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(100, 100, 100),
+    new THREE.Vector3(0, 0, 0)
+  );
+  const points = curve.getPoints(20);
+  const geom = new THREE.BufferGeometry().setFromPoints(points);
+  const mat = new THREE.LineBasicMaterial({ color: colors.ai, linewidth: 2 });
+  const line = new THREE.Line(geom, mat);
+  line.userData = { beam: b };
+  beamGroup.add(line);
+  b.line = line;
+});
 
-const beamSel = beamG.selectAll("path").data(beams).join("path")
-  .attr("class","beam");
+/* ---------------------------------------------------------------
+   FORCE SIMULATION (3D D3 style)
+----------------------------------------------------------------*/
+const nodeData = nodes.map(n => ({
+  id: n.id,
+  mesh: nodeObjects.get(n.id),
+  x: Math.random() * 200 - 100,
+  y: Math.random() * 200 - 100,
+  z: Math.random() * 200 - 100,
+  vx: 0, vy: 0, vz: 0,
+  fx: null, fy: null, fz: null,
+  mass: n.type === "core" ? 2 : n.type === "limb" ? 1 : 0.8,
+}));
 
-const nodeSel = nodeG.selectAll("g").data(nodes).join("g")
-  .attr("class", d => "node "+d.type + (d.type==="hot" ? " pulse":""))
-  .call(d3.drag()
-    .on("start",(e,d)=>{ if(!e.active) sim.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; })
-    .on("drag",(e,d)=>{ d.fx=e.x; d.fy=e.y; })
-    .on("end",(e,d)=>{ if(!e.active) sim.alphaTarget(0); if(d.id!=="aix"){d.fx=null; d.fy=null;} }))
-  .on("click", (e,d)=>{ e.stopPropagation(); showPanel(d); focusNode(d); });
+const nodeMap = new Map(nodeData.map(n => [n.id, n]));
 
-nodeSel.append("circle").attr("r", d =>
-  d.type==="core"?34:d.type==="limb"?12:d.type==="aihub"?22:d.type==="hot"?8:6);
+function simulate() {
+  const k = 0.001;
+  const alpha = 0.01;
 
-nodeSel.append("text")
-  .attr("text-anchor","middle")
-  .attr("dy", d => d.type==="core"?6 : d.type==="limb"?-18 : d.type==="aihub"?-30 : -12)
-  .text(d => d.name);
-
-svg.on("click", ()=>{ clearFocus(); hidePanel(); });
-
-sim.on("tick", () => {
-  // keep AI hub anchored
-  aiNode.fx = W*0.16; aiNode.fy = H*0.80;
-
-  linkSel.attr("x1",d=>d.source.x).attr("y1",d=>d.source.y)
-         .attr("x2",d=>d.target.x).attr("y2",d=>d.target.y);
-
-  beamSel.attr("d", d => {
-    const s=d.source, t=d.target;
-    const mx=(s.x+t.x)/2, my=(s.y+t.y)/2;
-    const dx=t.x-s.x, dy=t.y-s.y;
-    const curve = 0.22;
-    const cx=mx - dy*curve, cy=my + dx*curve;
-    return `M${s.x},${s.y} Q${cx},${cy} ${t.x},${t.y}`;
+  nodeData.forEach(a => {
+    a.vx *= 0.99;
+    a.vy *= 0.99;
+    a.vz *= 0.99;
   });
 
-  nodeSel.attr("transform", d=>`translate(${d.x},${d.y})`);
+  // repulsion
+  nodeData.forEach(a => {
+    nodeData.forEach(b => {
+      if (a === b) return;
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const dz = b.z - a.z;
+      const dist = Math.sqrt(dx*dx + dy*dy + dz*dz) + 0.01;
+      const f = -k * a.mass * b.mass / dist;
+      a.vx += (dx / dist) * f;
+      a.vy += (dy / dist) * f;
+      a.vz += (dz / dist) * f;
+    });
+  });
+
+  // attraction (links)
+  links.forEach(l => {
+    const a = nodeMap.get(l.source);
+    const b = nodeMap.get(l.target);
+    const targetDist = l.tier === 1 ? 80 : 40;
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const dz = b.z - a.z;
+    const dist = Math.sqrt(dx*dx + dy*dy + dz*dz) + 0.01;
+    const f = k * (dist - targetDist) * 0.5;
+    a.vx += (dx / dist) * f;
+    a.vy += (dy / dist) * f;
+    a.vz += (dz / dist) * f;
+  });
+
+  // center attraction
+  nodeData.forEach(n => {
+    n.vx -= n.x * 0.001;
+    n.vy -= n.y * 0.001;
+    n.vz -= n.z * 0.001;
+  });
+
+  // update positions
+  nodeData.forEach(n => {
+    if (n.fx != null) n.x = n.fx;
+    else n.x += n.vx;
+    if (n.fy != null) n.y = n.fy;
+    else n.y += n.vy;
+    if (n.fz != null) n.z = n.fz;
+    else n.z += n.vz;
+    n.mesh.position.set(n.x, n.y, n.z);
+  });
+
+  // update links
+  links.forEach(l => {
+    const src = nodeMap.get(l.source);
+    const tgt = nodeMap.get(l.target);
+    const geom = l.sourceMesh.parent.children.find(c => c.userData.link === l)?.geometry;
+    if (geom) {
+      const positions = [src.x, src.y, src.z, tgt.x, tgt.y, tgt.z];
+      geom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
+    }
+  });
+
+  // update beams
+  beams.forEach(b => {
+    const src = nodeMap.get(b.source.id);
+    const tgt = nodeMap.get(b.target.id);
+    const mid = {
+      x: (src.x + tgt.x) / 2 + 50,
+      y: (src.y + tgt.y) / 2 + 50,
+      z: (src.z + tgt.z) / 2,
+    };
+    const curve = new THREE.QuadraticBezierCurve3(
+      new THREE.Vector3(src.x, src.y, src.z),
+      new THREE.Vector3(mid.x, mid.y, mid.z),
+      new THREE.Vector3(tgt.x, tgt.y, tgt.z)
+    );
+    const points = curve.getPoints(20);
+    b.line.geometry.setFromPoints(points);
+  });
+}
+
+/* ---------------------------------------------------------------
+   INTERACTION
+----------------------------------------------------------------*/
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let selectedNode = null;
+let isDragging = false;
+let dragStart = { x: 0, y: 0 };
+let cameraRotation = { x: 0, y: 0 };
+
+window.addEventListener('mousemove', (e) => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+  if (isDragging) {
+    cameraRotation.y += (e.clientX - dragStart.x) * 0.005;
+    cameraRotation.x += (e.clientY - dragStart.y) * 0.005;
+    dragStart = { x: e.clientX, y: e.clientY };
+
+    const quatY = new THREE.Quaternion();
+    const quatX = new THREE.Quaternion();
+    quatY.setFromAxisAngle(new THREE.Vector3(0, 1, 0), cameraRotation.y);
+    quatX.setFromAxisAngle(new THREE.Vector3(1, 0, 0), cameraRotation.x);
+    nodeGroup.quaternion.multiplyQuaternions(quatY, quatX);
+  }
+});
+
+window.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  dragStart = { x: e.clientX, y: e.clientY };
+});
+
+window.addEventListener('mouseup', () => {
+  isDragging = false;
+});
+
+window.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  camera.position.z += e.deltaY * 0.2;
+  camera.position.z = Math.max(50, Math.min(800, camera.position.z));
+});
+
+canvas.addEventListener('click', (e) => {
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(nodeGroup.children);
+  if (intersects.length > 0) {
+    const obj = intersects[0].object;
+    const n = nodes.find(x => x.id === obj.userData.id);
+    if (n) showPanel(n);
+  } else {
+    hidePanel();
+  }
 });
 
 /* ---- AI force-field toggle ---- */
@@ -415,66 +508,43 @@ const aiToggle = document.getElementById("aiToggle");
 aiToggle.addEventListener("click", () => {
   aiOn = !aiOn;
   aiToggle.classList.toggle("on", aiOn);
-  beamSel.classed("on", aiOn);
-  nodeSel.filter(d=>d.id==="aix").style("display", aiOn ? null : null);
-  d3.select(".node.aihub").select("circle").transition().attr("r", aiOn?22:22);
-  // dim non-target nodes slightly when field is on, to read the beams
-  if (aiOn) {
-    const tset = new Set([...AI_TARGETS,"aix"]);
-    nodeSel.classed("dim", d => !tset.has(d.id) && d.type!=="core" && d.type!=="limb");
-  } else {
-    nodeSel.classed("dim", false);
-  }
+  beams.forEach(b => b.line.visible = aiOn);
+  beamGroup.children.forEach(line => line.visible = aiOn);
 });
-// AI hub hidden until toggled? keep visible but quiet; beams are the signal.
-
-/* ---- focus / neighbour highlight ---- */
-const adj = new Map(nodes.map(n=>[n.id,new Set()]));
-links.forEach(l=>{ adj.get(l.source.id||l.source).add(l.target.id||l.target); adj.get(l.target.id||l.target).add(l.source.id||l.source); });
-beams.forEach(b=>{ adj.get(b.source.id).add(b.target.id); adj.get(b.target.id).add(b.source.id); });
-
-function focusNode(d){
-  const keep = new Set([d.id, ...adj.get(d.id)]);
-  nodeSel.classed("dim", n => !keep.has(n.id));
-  linkSel.classed("dim", l => !(keep.has(l.source.id) && keep.has(l.target.id)));
-}
-function clearFocus(){
-  if (aiOn) { aiToggle.click(); } // reset field too
-  nodeSel.classed("dim", false);
-  linkSel.classed("dim", false);
-}
 
 /* ---- detail panel ---- */
-const panel=document.getElementById("panel");
-function showPanel(d){
+const panel = document.getElementById("panel");
+function showPanel(d) {
   document.getElementById("pTag").textContent =
-    d.type==="core"?"the term":d.type==="aihub"?"cross-cutting force":d.type==="limb"?"durable limb":HOT.has(d.id)?"2026 movement":"sub-field";
+    d.type === "core" ? "the term" : d.type === "aihub" ? "cross-cutting force" : d.type === "limb" ? "durable limb" : HOT.has(d.id) ? "2026 movement" : "sub-field";
   document.getElementById("pName").textContent = d.name;
-  let flags="";
-  if (HOT.has(d.id)) flags+='<span class="hotflag">★ live 2026</span>';
-  if (AI_TARGETS.includes(d.id)) flags+='<span class="aiflag">AI-pushed</span>';
-  if (d.id==="aix") flags+='<span class="aiflag">force field</span>';
-  document.getElementById("pFlags").innerHTML=flags;
-  document.getElementById("pNote").textContent = NOTES[d.id] || "Durable sub-field of "+d.name+".";
-  const kids=document.getElementById("pKids");
-  if (d.kids){
-    kids.style.display="block";
-    kids.innerHTML='<div class="kl">contains</div>'+d.kids.map(([id,n])=>
-      `<span class="${HOT.has(id)?'h':''}">${n}${HOT.has(id)?' ★':''}</span>`).join("");
-  } else kids.style.display="none";
+  const note = NOTES[d.id] || "";
+  document.getElementById("pNote").innerHTML = note ? `<div class="note">${note}</div>` : "";
+  const kidsHtml = d.kids ? d.kids.map(k => `<div class="kid">• ${k[1]}</div>`).join("") : "";
+  document.getElementById("pKids").innerHTML = kidsHtml ? `<div class="kids">${kidsHtml}</div>` : "";
   panel.classList.add("show");
 }
-function hidePanel(){ panel.classList.remove("show"); }
 
-/* ---- resize + reduced motion ---- */
-window.addEventListener("resize", ()=>{
-  W=window.innerWidth; H=window.innerHeight;
-  sim.force("center", d3.forceCenter(W/2,H/2));
-  sim.alpha(0.3).restart();
-});
-if (window.matchMedia("(prefers-reduced-motion: reduce)").matches){
-  document.querySelectorAll(".node.hot").forEach(n=>n.classList.remove("pulse"));
+function hidePanel() {
+  panel.classList.remove("show");
 }
+
+/* ---------------------------------------------------------------
+   ANIMATION LOOP
+----------------------------------------------------------------*/
+function animate() {
+  requestAnimationFrame(animate);
+  simulate();
+  renderer.render(scene, camera);
+}
+
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
 </script>
 </body>
 </html>
