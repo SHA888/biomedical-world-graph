@@ -27,7 +27,9 @@ The biomedical world is vast and fragmented. This graph organizes it into **nine
 
 ### View the Interactive Map
 
-Open `biomedical-world-graph.html` in a web browser. You can:
+**Live on GitHub Pages:** https://SHA888.github.io/biomedical-world-graph/
+
+Or open `biomedical-world-graph.html` locally in a web browser. You can:
 
 - **Pan and zoom** — Drag to move, scroll to zoom
 - **Hover** — Dimming highlights one node and its immediate connections
