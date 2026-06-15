@@ -33,6 +33,10 @@ Open `biomedical-world-graph.html` in a web browser. You can:
 - **Hover** — Dimming highlights one node and its immediate connections
 - **Click nodes** — Inspect labels and relationships
 
+![Biomedical World Graph 2026](biomedical-world-graph.png)
+
+*The Biomedical Field 2026: Nine durable limbs radiating from "Biomedical" (center). Orange nodes are 2026 live movement; gray nodes are stable fields; cyan is the AI/ML cross-cutting force.*
+
 ### Explore the Taxonomy
 
 Read `TAXONOMY.md` for:
