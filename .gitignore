@@ -1,0 +1,22 @@
+# Claude Code
+.claude/
+
+# Harness memory
+.harness-mem/
+
+# Node.js (if tooling is added)
+node_modules/
+package-lock.json
+yarn.lock
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.env.local
