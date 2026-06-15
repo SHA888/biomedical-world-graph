@@ -312,35 +312,31 @@ nodes.forEach(n => {
 });
 
 // links: lines
+const linkLines = [];
 links.forEach(l => {
-  const geom = new THREE.BufferGeometry();
   const src = nodeObjects.get(l.source);
   const tgt = nodeObjects.get(l.target);
-  const srcNode = src.userData.node;
-  const tgtNode = tgt.userData.node;
   l.sourceMesh = src;
   l.targetMesh = tgt;
-  const material = new THREE.LineBasicMaterial({ color: l.tier === 1 ? colors.linkHi : colors.linkLo, linewidth: l.tier === 1 ? 2 : 1 });
+  const geom = new THREE.BufferGeometry();
+  const material = new THREE.LineBasicMaterial({ color: l.tier === 1 ? colors.linkHi : colors.linkLo });
   const line = new THREE.Line(geom, material);
   line.userData = { link: l };
   linkGroup.add(line);
+  linkLines.push({ link: l, line });
 });
 
-// beams: smooth curves (via TubeGeometry approximation with quadratic)
+// beams: smooth curves
+const beamLines = [];
 beams.forEach(b => {
   b.sourceMesh = nodeObjects.get(b.source.id);
   b.targetMesh = nodeObjects.get(b.target.id);
-  const curve = new THREE.QuadraticBezierCurve3(
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(100, 100, 100),
-    new THREE.Vector3(0, 0, 0)
-  );
-  const points = curve.getPoints(20);
-  const geom = new THREE.BufferGeometry().setFromPoints(points);
-  const mat = new THREE.LineBasicMaterial({ color: colors.ai, linewidth: 2 });
+  const geom = new THREE.BufferGeometry();
+  const mat = new THREE.LineBasicMaterial({ color: colors.ai });
   const line = new THREE.Line(geom, mat);
   line.userData = { beam: b };
   beamGroup.add(line);
+  beamLines.push({ beam: b, line });
   b.line = line;
 });
 
@@ -419,18 +415,15 @@ function simulate() {
   });
 
   // update links
-  links.forEach(l => {
+  linkLines.forEach(({ link: l, line }) => {
     const src = nodeMap.get(l.source);
     const tgt = nodeMap.get(l.target);
-    const geom = l.sourceMesh.parent.children.find(c => c.userData.link === l)?.geometry;
-    if (geom) {
-      const positions = [src.x, src.y, src.z, tgt.x, tgt.y, tgt.z];
-      geom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
-    }
+    const positions = new Float32Array([src.x, src.y, src.z, tgt.x, tgt.y, tgt.z]);
+    line.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   });
 
   // update beams
-  beams.forEach(b => {
+  beamLines.forEach(({ beam: b, line }) => {
     const src = nodeMap.get(b.source.id);
     const tgt = nodeMap.get(b.target.id);
     const mid = {
@@ -444,7 +437,7 @@ function simulate() {
       new THREE.Vector3(tgt.x, tgt.y, tgt.z)
     );
     const points = curve.getPoints(20);
-    b.line.geometry.setFromPoints(points);
+    line.geometry.setFromPoints(points);
   });
 }
 
@@ -463,15 +456,15 @@ window.addEventListener('mousemove', (e) => {
   mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
   if (isDragging) {
-    cameraRotation.y += (e.clientX - dragStart.x) * 0.005;
-    cameraRotation.x += (e.clientY - dragStart.y) * 0.005;
+    const dx = (e.clientX - dragStart.x) * 0.01;
+    const dy = (e.clientY - dragStart.y) * 0.01;
     dragStart = { x: e.clientX, y: e.clientY };
 
-    const quatY = new THREE.Quaternion();
-    const quatX = new THREE.Quaternion();
-    quatY.setFromAxisAngle(new THREE.Vector3(0, 1, 0), cameraRotation.y);
-    quatX.setFromAxisAngle(new THREE.Vector3(1, 0, 0), cameraRotation.x);
-    nodeGroup.quaternion.multiplyQuaternions(quatY, quatX);
+    const axis = new THREE.Vector3(dy, dx, 0).normalize();
+    const angle = Math.sqrt(dx*dx + dy*dy) * 0.05;
+    const quat = new THREE.Quaternion();
+    quat.setFromAxisAngle(axis, angle);
+    nodeGroup.quaternion.multiplyQuaternions(quat, nodeGroup.quaternion);
   }
 });
 
