@@ -322,7 +322,11 @@ limbs.forEach(L => {
 });
 // AI hub
 nodes.push({ id:"aix", name:"AI / ML", type:"aihub" });
-const beams = AI_TARGETS.map(t => ({ source:"aix", target:t }));
+const beams = AI_TARGETS.map(t => {
+  const srcNode = nodes.find(n => n.id === "aix");
+  const tgtNode = nodes.find(n => n.id === t);
+  return { source: srcNode, target: tgtNode };
+});
 
 /* ---------------------------------------------------------------
    RENDER
@@ -427,6 +431,7 @@ aiToggle.addEventListener("click", () => {
 /* ---- focus / neighbour highlight ---- */
 const adj = new Map(nodes.map(n=>[n.id,new Set()]));
 links.forEach(l=>{ adj.get(l.source.id||l.source).add(l.target.id||l.target); adj.get(l.target.id||l.target).add(l.source.id||l.source); });
+beams.forEach(b=>{ adj.get(b.source.id).add(b.target.id); adj.get(b.target.id).add(b.source.id); });
 
 function focusNode(d){
   const keep = new Set([d.id, ...adj.get(d.id)]);
