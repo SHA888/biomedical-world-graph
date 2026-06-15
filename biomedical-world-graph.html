@@ -181,6 +181,7 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/renderers/CSS2DRenderer.js"></script>
 <script>
 /* ---------------------------------------------------------------
    DATA — transcribed verbatim from biomedical-2026-taxonomy.md
@@ -252,6 +253,12 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x0a0e1a);
+const labelRenderer = new THREE.CSS2DRenderer();
+labelRenderer.setSize(window.innerWidth, window.innerHeight);
+labelRenderer.domElement.style.position = 'absolute';
+labelRenderer.domElement.style.top = '0px';
+labelRenderer.domElement.style.pointerEvents = 'none';
+document.body.appendChild(labelRenderer.domElement);
 camera.position.z = 300;
 
 // lighting
@@ -309,6 +316,28 @@ nodes.forEach(n => {
   mesh.userData = { id: n.id, node: n, radius };
   nodeGroup.add(mesh);
   nodeObjects.set(n.id, mesh);
+});
+
+// labels
+const labelGroup = new THREE.Group();
+scene.add(labelGroup);
+nodes.forEach(n => {
+  const mesh = nodeObjects.get(n.id);
+  const labelDiv = document.createElement('div');
+  labelDiv.className = 'node-label';
+  labelDiv.style.fontSize = n.type === 'core' ? '14px' : n.type === 'limb' ? '11px' : '8px';
+  labelDiv.style.color = n.type === 'hot' ? '#ffd9c7' : n.type === 'aihub' ? '#4fd1ff' : '#e8e6df';
+  labelDiv.style.fontWeight = n.type === 'core' || n.type === 'limb' ? '600' : '400';
+  labelDiv.style.fontFamily = n.type === 'core' ? 'Fraunces, serif' : 'Space Grotesk, sans-serif';
+  labelDiv.style.textAlign = 'center';
+  labelDiv.style.whiteSpace = 'nowrap';
+  labelDiv.style.pointerEvents = 'none';
+  labelDiv.style.textShadow = '0 0 4px rgba(10,14,26,0.8)';
+  labelDiv.textContent = n.name;
+  const label = new THREE.CSS2DObject(labelDiv);
+  label.position.copy(mesh.position);
+  mesh.userData.label = label;
+  labelGroup.add(label);
 });
 
 // links: lines
@@ -412,6 +441,7 @@ function simulate() {
     if (n.fz != null) n.z = n.fz;
     else n.z += n.vz;
     n.mesh.position.set(n.x, n.y, n.z);
+    if (n.mesh.userData.label) n.mesh.userData.label.position.copy(n.mesh.position);
   });
 
   // update links
@@ -529,6 +559,7 @@ function animate() {
   requestAnimationFrame(animate);
   simulate();
   renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
 }
 
 animate();
@@ -537,6 +568,7 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+  labelRenderer.setSize(window.innerWidth, window.innerHeight);
 });
 </script>
 </body>
