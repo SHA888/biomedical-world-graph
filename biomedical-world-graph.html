@@ -357,24 +357,24 @@ const nodeData = nodes.map(n => ({
 const nodeMap = new Map(nodeData.map(n => [n.id, n]));
 
 function simulate() {
-  const k = 0.001;
-  const alpha = 0.01;
+  const k = 50;
+  const damping = 0.92;
 
   nodeData.forEach(a => {
-    a.vx *= 0.99;
-    a.vy *= 0.99;
-    a.vz *= 0.99;
+    a.vx *= damping;
+    a.vy *= damping;
+    a.vz *= damping;
   });
 
-  // repulsion
+  // repulsion (strong to prevent collapse)
   nodeData.forEach(a => {
     nodeData.forEach(b => {
       if (a === b) return;
       const dx = b.x - a.x;
       const dy = b.y - a.y;
       const dz = b.z - a.z;
-      const dist = Math.sqrt(dx*dx + dy*dy + dz*dz) + 0.01;
-      const f = -k * a.mass * b.mass / dist;
+      const dist = Math.sqrt(dx*dx + dy*dy + dz*dz) + 1;
+      const f = -k * a.mass * b.mass / (dist * dist);
       a.vx += (dx / dist) * f;
       a.vy += (dy / dist) * f;
       a.vz += (dz / dist) * f;
@@ -385,22 +385,22 @@ function simulate() {
   links.forEach(l => {
     const a = nodeMap.get(l.source);
     const b = nodeMap.get(l.target);
-    const targetDist = l.tier === 1 ? 80 : 40;
+    const targetDist = l.tier === 1 ? 150 : 80;
     const dx = b.x - a.x;
     const dy = b.y - a.y;
     const dz = b.z - a.z;
-    const dist = Math.sqrt(dx*dx + dy*dy + dz*dz) + 0.01;
-    const f = k * (dist - targetDist) * 0.5;
+    const dist = Math.sqrt(dx*dx + dy*dy + dz*dz) + 1;
+    const f = (dist - targetDist) * 0.3;
     a.vx += (dx / dist) * f;
     a.vy += (dy / dist) * f;
     a.vz += (dz / dist) * f;
   });
 
-  // center attraction
+  // weak center attraction (keep from drifting off)
   nodeData.forEach(n => {
-    n.vx -= n.x * 0.001;
-    n.vy -= n.y * 0.001;
-    n.vz -= n.z * 0.001;
+    n.vx -= n.x * 0.0001;
+    n.vy -= n.y * 0.0001;
+    n.vz -= n.z * 0.0001;
   });
 
   // update positions
