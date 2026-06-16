@@ -13,13 +13,19 @@ The taxonomy is grounded in evidence: each year's active areas are sourced from 
 
 ## Project Structure
 
-- `TAXONOMY.md` — Mermaid graph, outline form, evidence notes, and limitations. This is the single source of truth.
-- `biomedical-world-graph.html` — Interactive D3/SVG visualization. Shows the same taxonomy with:
+The project is a **Vite + TypeScript** web app (package manager: **pnpm**). A renderer migration is in progress — see `TODO.md` for the phased roadmap.
+
+- `TAXONOMY.md` — Mermaid graph, outline form, evidence notes, and limitations. This is the **human-facing single source of truth** for the taxonomy.
+- `src/data/taxonomy.ts` — Typed runtime SSOT mirrored from `TAXONOMY.md` (`HOT`, `AI_TARGETS`, `NOTES`, `LIMBS`, and `buildGraph()`). Consumed by the app.
+- `src/scene/graph.ts`, `src/ui/panel.ts` — 3D scene + inspector panel (currently documented stubs awaiting Phase 2 migration).
+- `src/main.ts`, `src/style.css`, `index.html` — Vite entry / landing shell.
+- `biomedical-world-graph.html` — **Legacy** interactive 3D Three.js visualization (CDN-loaded). Still live and untouched until the Phase 2 migration ports it into `src/`, after which it is retired. Shows the same taxonomy with:
   - Core node (Biomedical, central yellow)
   - Limb nodes (primary buckets, blue)
   - Leaf nodes (2026 snapshot items, orange with pulse animation; stable items, gray)
   - AI/ML cross-cutting force (blue dotted lines with animated flow)
   - Click/drag interactions and hover dimming
+- `TODO.md` — Migration roadmap (Scaffold → Tooling → Migrate renderer → Data pipeline → Deployment → Polish).
 
 ## Editing the Taxonomy
 
@@ -29,7 +35,8 @@ The taxonomy is grounded in evidence: each year's active areas are sourced from 
 2. Simultaneously update the outline (`## Taxonomy (outline form)` section)
 3. If 2026-snapshot, mark with `*` and add the corresponding `classDef hot` CSS class
 4. Update `## 2026 evidence notes` table with the source signal (publication, conference, reporting)
-5. Test the HTML visualization (open in a browser; drag to pan, click nodes to inspect)
+5. Mirror the change into `src/data/taxonomy.ts` (the typed runtime SSOT: `LIMBS`, `HOT`, `AI_TARGETS`, `NOTES`). Until the Phase 3 data pipeline lands, these two files are kept in sync by hand.
+6. Test the app (`pnpm dev`) and verify `pnpm typecheck` still passes
 
 ### Seasonal Updates (Annual)
 
@@ -51,15 +58,15 @@ The `*` snapshot items are the mutable layer. Each year:
   - Orange (with glow/pulse): 2026 snapshot nodes (active right now)
   - Cyan: AI/ML cross-cutting force
 
-## Refreshing the HTML Visualization
+## Refreshing the Visualization
 
-The HTML file is hand-maintained alongside TAXONOMY.md. After editing the taxonomy:
+The visualization reads from `src/data/taxonomy.ts`, which is mirrored from `TAXONOMY.md`. After editing the taxonomy:
 
 1. Verify the Mermaid graph renders correctly in a markdown preview or online Mermaid editor
-2. Manually synchronize node positions and styling in the HTML SVG if the graph structure changed significantly
-3. Test interaction: pan/zoom should work; hover dimming should highlight one node's neighborhood
+2. Confirm `src/data/taxonomy.ts` reflects the same nodes/links (see step 5 of "Adding or Moving a Node")
+3. Run `pnpm dev` and test interaction: drag to rotate, scroll to zoom, click a node to inspect
 
-The HTML is not auto-generated; keep both files in sync during edits.
+While the legacy `biomedical-world-graph.html` is still the live renderer, also sync its inline data literals during edits. Once Phase 2 retires it, `src/data/taxonomy.ts` is the only place to touch.
 
 ## Key Design Notes
 
@@ -69,25 +76,33 @@ The HTML is not auto-generated; keep both files in sync during edits.
 
 ## Development Workflow
 
-Since there are no tests or build tools, the workflow is:
+The project uses **pnpm** + **Vite** + **TypeScript**.
+
+```bash
+pnpm install      # install dependencies (run once)
+pnpm dev          # start the Vite dev server (HMR)
+pnpm typecheck    # tsc --noEmit
+pnpm build        # typecheck + production build to dist/
+pnpm preview      # preview the production build
+```
+
+Typical taxonomy-change workflow:
 
 1. Edit `TAXONOMY.md` (graph + outline + evidence)
-2. Verify markdown renders
-3. Optionally sync `biomedical-world-graph.html` if structure changed
-4. Commit both files together with a message like `Update 2026 snapshot: add X, deprecate Y`
+2. Mirror the change into `src/data/taxonomy.ts`
+3. Verify markdown renders, then run `pnpm dev` and `pnpm typecheck`
+4. Commit related files together with a message like `Update 2026 snapshot: add X, deprecate Y`
 
-No linting, building, or testing is needed; clarity and accuracy are the only quality gates.
+For code changes, `pnpm typecheck` (and `pnpm build`) must pass before committing. See `TODO.md` for the migration roadmap and remaining quality gates (lint, tests).
 
 ## Commit Guidelines
 
-- **Do not include `Co-Authored-By:` trailers** in commit messages. This applies to all assistant-generated commits. Commit attribution stays with the human author.
-- All commit messages must be in **English only**.
+**Do not include `Co-Authored-By:` trailers in commit messages.** This applies to all assistant-generated commits, including those produced by Claude Code or any other AI tool. Commit attribution stays with the human author. Boilerplate trailers add noise to the history without conveying meaningful authorship and have been retroactively stripped from past commits.
 
 ## English-Only Requirement
 
-All tracked files must follow this constraint:
-
-- All Plans.md content must be in English (headers, table columns, task descriptions, status markers)
-- No Japanese characters in Plans.md status markers (use `cc:done` instead of `cc:完了`, `cc:wip` instead of `cc:WIP`, etc.)
-- All harness output and documentation must be in English
-- TAXONOMY.md and biomedical-world-graph.html must remain in English
+- All Plans.md content must be in English (headers, table columns, task descriptions, status markers).
+- No Japanese characters in Plans.md status markers (use `cc:done` instead of `cc:完了`, `cc:wip` instead of `cc:WIP`, etc).
+- All harness output and documentation must be in English.
+- TAXONOMY.md and biomedical-world-graph.html must remain in English.
+- This applies strictly to tracked files; commit to this constraint when editing Plans.md.
