@@ -1,0 +1,64 @@
+:root {
+  --bg: #0a0e1a;
+  --core: #f4d58d;
+  --hot: #ff6b35;
+  --ai: #4fd1ff;
+  --ink: #e8e6df;
+  --ink-dim: #9aa3b5;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, sans-serif;
+}
+
+.shell {
+  max-width: 640px;
+  margin: 12vh auto 0;
+  padding: 0 24px;
+}
+
+.shell h1 {
+  font-size: 34px;
+  letter-spacing: -0.01em;
+}
+
+.shell .sub {
+  margin-top: 8px;
+  color: var(--ink-dim);
+}
+
+.shell .stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 28px;
+  list-style: none;
+  margin: 28px 0;
+}
+
+.shell .stats strong {
+  color: var(--core);
+  font-size: 22px;
+  display: block;
+}
+
+.shell .stats li {
+  color: var(--ink-dim);
+  font-size: 13px;
+}
+
+.shell .legacy {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(139, 155, 180, 0.18);
+  color: var(--ink-dim);
+  font-size: 14px;
+}
+
+.shell a {
+  color: var(--ai);
+}

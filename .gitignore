@@ -4,10 +4,13 @@
 # Harness memory
 .harness-mem/
 
-# Node.js (if tooling is added)
+# Node.js (using pnpm — commit pnpm-lock.yaml, ignore other managers' lockfiles)
 node_modules/
 package-lock.json
 yarn.lock
+
+# Build output
+dist/
 
 # OS
 .DS_Store
